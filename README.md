@@ -18,12 +18,3 @@
 3. **Observer Pattern:** 
    - الكلاس `EventManager` يرسل إشعارات في الوقت الفعلي إلى الواجهة (UI) لتعرضها في "سجل الأحداث" كلما حدث تغيير.
 
-## كيفية التشغيل
-
-```bash
-# تجميع الكود
-javac -encoding UTF-8 -d out src/com/smartgrid/model/*.java src/com/smartgrid/observer/*.java src/com/smartgrid/strategy/*.java src/com/smartgrid/manager/*.java src/com/smartgrid/ui/*.java src/com/smartgrid/*.java
-
-# تشغيل الواجهة
-java -cp out com.smartgrid.GUIMain
-```
