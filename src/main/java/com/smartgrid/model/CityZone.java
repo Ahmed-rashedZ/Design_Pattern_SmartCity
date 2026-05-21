@@ -27,8 +27,8 @@ public class CityZone {
      * Helper to get status text based on allocation vs demand.
      */
     public String getStatus() {
-        if (allocated >= demand) return "🟢 Fully Powered";
-        if (allocated > 0) return "🟡 Partial Power";
-        return "🔴 Power Cut";
+        if (allocated >= demand) return "Fully Powered";
+        if (allocated > 0) return "Partial Power";
+        return "Power Cut";
     }
 }

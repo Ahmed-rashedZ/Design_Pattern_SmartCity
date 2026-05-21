@@ -8,6 +8,7 @@ import com.smartgrid.strategy.EmergencyStrategy;
 import com.smartgrid.strategy.NormalStrategy;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalTime;
@@ -34,22 +35,20 @@ public class SimpleUI extends JFrame implements GridObserver {
 
     private void setupWindow() {
         setTitle("Smart Grid Controller - Interactive Edition");
-        setSize(850, 600);
+        setSize(900, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(15, 15));
-        getContentPane().setBackground(Color.WHITE);
-
+        
         // --- 1. Top Panel (Power Slider + Strategies) ---
         JPanel topContainer = new JPanel(new BorderLayout());
-        topContainer.setBackground(new Color(245, 245, 250));
 
         // Slider for Total Power
         JPanel sliderPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         sliderPanel.setOpaque(false);
         int totalDemand = manager.getTotalDemand(); // Should be 175
         powerLabel = new JLabel("Available Grid Power: " + totalDemand + " MW");
-        powerLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        powerLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
         
         powerSlider = new JSlider(0, 200, totalDemand);
         powerSlider.setPreferredSize(new Dimension(300, 40));
@@ -59,7 +58,7 @@ public class SimpleUI extends JFrame implements GridObserver {
         powerSlider.setPaintLabels(true);
         powerSlider.addChangeListener(e -> powerLabel.setText("Available Grid Power: " + powerSlider.getValue() + " MW"));
 
-        sliderPanel.add(new JLabel("Low Power ⚡"));
+        sliderPanel.add(new JLabel("Low Power "));
         sliderPanel.add(powerSlider);
         sliderPanel.add(powerLabel);
 
@@ -67,13 +66,13 @@ public class SimpleUI extends JFrame implements GridObserver {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         btnPanel.setOpaque(false);
 
-        JButton normalBtn = createButton("Normal Day ☀️", new Color(52, 152, 219));
+        JButton normalBtn = createButton("Normal Day", new Color(41, 128, 185));
         normalBtn.addActionListener(e -> applyStrategy(new NormalStrategy()));
 
-        JButton ecoBtn = createButton("Eco-Friendly 🌿", new Color(46, 204, 113));
+        JButton ecoBtn = createButton("Eco-Friendly", new Color(39, 174, 96));
         ecoBtn.addActionListener(e -> applyStrategy(new EcoStrategy()));
 
-        JButton emergencyBtn = createButton("Emergency 🚨", new Color(231, 76, 60));
+        JButton emergencyBtn = createButton("Emergency", new Color(192, 57, 43));
         emergencyBtn.addActionListener(e -> applyStrategy(new EmergencyStrategy()));
 
         btnPanel.add(normalBtn);
@@ -87,25 +86,56 @@ public class SimpleUI extends JFrame implements GridObserver {
         String[] columns = {"Zone Name", "Type", "Demand (MW)", "Allocated (MW)", "Status"};
         tableModel = new DefaultTableModel(columns, 0);
         JTable table = new JTable(tableModel);
-        table.setRowHeight(35);
-        table.setFont(new Font("Arial", Font.PLAIN, 14));
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        table.setRowHeight(40);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
         table.setEnabled(false); // Make it read-only
+        
+        // Default Center Renderer for regular columns
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        
+        // Status Column Renderer (Colored and Centered)
+        DefaultTableCellRenderer statusRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(JLabel.CENTER);
+                String status = value.toString();
+                if (status.equals("Fully Powered")) {
+                    c.setForeground(new Color(39, 174, 96)); // Green
+                } else if (status.equals("Partial Power")) {
+                    c.setForeground(new Color(211, 84, 0)); // Orange
+                } else {
+                    c.setForeground(new Color(192, 57, 43)); // Red
+                }
+                setFont(new Font("Segoe UI", Font.BOLD, 14));
+                return c;
+            }
+        };
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            if (i == 4) { // Status column index is 4
+                table.getColumnModel().getColumn(i).setCellRenderer(statusRenderer);
+            } else {
+                table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+            }
+        }
         
         JScrollPane tableScroll = new JScrollPane(table);
         tableScroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         // --- 3. Bottom Panel (Event Log) ---
-        logArea = new JTextArea(7, 40);
+        logArea = new JTextArea(8, 40);
         logArea.setEditable(false);
-        logArea.setFont(new Font("Consolas", Font.PLAIN, 13));
-        logArea.setBackground(new Color(250, 250, 250));
+        logArea.setFont(new Font("Consolas", Font.PLAIN, 14));
+        logArea.setMargin(new Insets(10, 10, 10, 10));
         JScrollPane logScroll = new JScrollPane(logArea);
         logScroll.setBorder(BorderFactory.createTitledBorder("System Event Log (Observer Pattern)"));
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 15, 20));
-        bottomPanel.setBackground(Color.WHITE);
         bottomPanel.add(logScroll, BorderLayout.CENTER);
 
         // Add to Frame
@@ -119,17 +149,19 @@ public class SimpleUI extends JFrame implements GridObserver {
 
     private JButton createButton(String text, Color color) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setBackground(color);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setPreferredSize(new Dimension(160, 40));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setPreferredSize(new Dimension(170, 45));
         return btn;
     }
 
     private void applyStrategy(com.smartgrid.strategy.DistributionStrategy strategy) {
         int power = powerSlider.getValue();
-        manager.applyStrategy(strategy, power);
+        manager.setStrategy(strategy);
+        manager.executeStrategy(power);
         updateTable();
     }
 

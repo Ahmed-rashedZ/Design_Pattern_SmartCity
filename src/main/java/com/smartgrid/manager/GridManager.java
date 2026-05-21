@@ -15,17 +15,18 @@ public class GridManager {
     private static GridManager instance;
     private List<CityZone> zones;
     private EventManager eventManager;
+    private DistributionStrategy currentStrategy; // Strategy Pattern: Context holds a reference to the Strategy
 
     private GridManager() {
         zones = new ArrayList<>();
         eventManager = new EventManager();
         
         // Add default zones with Demands (MW)
-        zones.add(new CityZone("Central Hospital 🏥", true, 30));
-        zones.add(new CityZone("Government Office 🏢", true, 20));
-        zones.add(new CityZone("Residential Area 🏠", false, 40));
-        zones.add(new CityZone("Shopping Mall 🏪", false, 35));
-        zones.add(new CityZone("Factory Zone 🏭", false, 50));
+        zones.add(new CityZone("Central Hospital", true, 30));
+        zones.add(new CityZone("Government Office", true, 20));
+        zones.add(new CityZone("Residential Area", false, 40));
+        zones.add(new CityZone("Shopping Mall", false, 35));
+        zones.add(new CityZone("Factory Zone", false, 50));
     }
 
     public static GridManager getInstance() {
@@ -49,19 +50,28 @@ public class GridManager {
         return sum;
     }
 
-    public void applyStrategy(DistributionStrategy strategy, int totalAvailablePower) {
-        eventManager.notify("Applying Strategy: " + strategy.getStrategyName() + " | Grid Power: " + totalAvailablePower + " MW");
+    public void setStrategy(DistributionStrategy strategy) {
+        this.currentStrategy = strategy;
+    }
+
+    public void executeStrategy(int totalAvailablePower) {
+        if (currentStrategy == null) {
+            eventManager.notify("❌ Error: No Strategy Set!");
+            return;
+        }
+
+        eventManager.notify("Applying Strategy: " + currentStrategy.getStrategyName() + " | Grid Power: " + totalAvailablePower + " MW");
         
         // Reset allocations first
         for(CityZone z : zones) z.setAllocated(0);
 
         // Apply
-        strategy.distributePower(totalAvailablePower, zones);
+        currentStrategy.distributePower(totalAvailablePower, zones);
         
         // Notify about results based on strategy type
-        if (strategy.getStrategyName().contains("Emergency")) {
+        if (currentStrategy.getStrategyName().contains("Emergency")) {
             eventManager.notify("🚨 WARNING: Emergency protocol active. Power cut to non-essential zones.");
-        } else if (strategy.getStrategyName().contains("Eco")) {
+        } else if (currentStrategy.getStrategyName().contains("Eco")) {
             eventManager.notify("🌿 ECO MODE: Non-critical power reduced by 30% to save energy.");
         }
 
